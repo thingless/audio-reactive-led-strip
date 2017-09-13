@@ -9,6 +9,10 @@ import config
 if config.DEVICE == 'esp8266':
     import socket
     _sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+elif config.DEVICE == 'lightstring':
+    import socket
+    _sock = socket.socket()
+    _sock.connect((config.UDP_IP, config.UDP_PORT))
 # Raspberry Pi controls the LED strip directly
 elif config.DEVICE == 'pi':
     import neopixel
@@ -41,6 +45,27 @@ pixels = np.tile(1, (3, config.N_PIXELS))
 """Pixel values for the LED strip"""
 
 _is_python_2 = int(platform.python_version_tuple()[0]) == 2
+
+def _update_lightstring():
+    global pixels, _prev_pixels
+    pixels = np.clip(pixels, 0, 255).astype(int)
+    p = _gamma[pixels] if config.SOFTWARE_GAMMA_CORRECTION else np.copy(pixels)
+    MAX_PIXELS_PER_PACKET = (2048-10)//3
+    idx = range(pixels.shape[1])
+    n_packets = len(idx) // MAX_PIXELS_PER_PACKET + 1
+    assert n_packets == 1, "there can only be one packet :("
+    idx = np.array_split(idx, n_packets)
+    for packet_indices in idx:
+        m = ''
+        #(len)(cmd)(delay)(start_index)(num_pixels)(r)(g)(b)(r)(g)(b)...
+        m += 'w' + chr(0) + chr(0) + chr(config.N_PIXELS)
+        for i in packet_indices:
+            m += chr(p[0][i]) + chr(p[1][i]) + chr(p[2][i])
+        m = chr(len(m)//256)+chr(len(m)%256) + m
+        m += chr(0)
+        #print(' '.join(map(str, map(ord, m))))
+        #print(repr(m))
+        _sock.send(m)
 
 def _update_esp8266():
     """Sends UDP packets to ESP8266 to update LED strip values
@@ -113,7 +138,7 @@ def _update_blinkstick():
         This function updates the LED strip with new values.
     """
     global pixels
-    
+
     # Truncate values and cast to integer
     pixels = np.clip(pixels, 0, 255).astype(int)
     # Optional gamma correction
@@ -139,6 +164,8 @@ def update():
     """Updates the LED strip values"""
     if config.DEVICE == 'esp8266':
         _update_esp8266()
+    elif config.DEVICE == 'lightstring':
+        _update_lightstring()
     elif config.DEVICE == 'pi':
         _update_pi()
     elif config.DEVICE == 'blinkstick':
