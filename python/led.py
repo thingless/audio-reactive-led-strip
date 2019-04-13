@@ -140,10 +140,11 @@ def _update_dmx():
     pixels = np.clip(pixels, 0, 255).astype(int)
     # Optional gamma correction
     p = _gamma[pixels] if config.SOFTWARE_GAMMA_CORRECTION else np.copy(pixels)
-    # flatten array
-    p = p.flatten()
-    #write data to stdout
-    print('1 0 ' + ' '.join(map(str, p)))
+    # Update the pixels
+    m = '1 0'
+    for i in range(config.N_PIXELS):
+        m += ' {} {} {}'.format(p[0][i], p[1][i], p[2][i])
+    print(m)
     print('END')
     sys.stdout.flush()
 
