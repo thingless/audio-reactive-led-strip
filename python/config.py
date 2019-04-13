@@ -3,7 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import os
 
-DEVICE = 'lightstring'
+DEVICE = 'dmx'
 """Device used to control LED strip. Must be 'pi',  'esp8266' or 'blinkstick'
 
 'esp8266' means that you are using an ESP8266 module to control the LED strip
@@ -19,6 +19,9 @@ to control the leds connected to it.
 if DEVICE == 'lightstring':
     UDP_IP = '192.168.60.206'
     UDP_PORT = 10000
+    SOFTWARE_GAMMA_CORRECTION = True
+
+if DEVICE == 'dmx':
     SOFTWARE_GAMMA_CORRECTION = True
 
 if DEVICE == 'esp8266':

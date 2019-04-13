@@ -4,6 +4,7 @@ from __future__ import division
 import platform
 import numpy as np
 import config
+import sys
 
 # ESP8266 uses WiFi communication
 if config.DEVICE == 'esp8266':
@@ -133,6 +134,19 @@ def _update_pi():
     _prev_pixels = np.copy(p)
     strip.show()
 
+def _update_dmx():
+    global pixels
+    # Truncate values and cast to integer
+    pixels = np.clip(pixels, 0, 255).astype(int)
+    # Optional gamma correction
+    p = _gamma[pixels] if config.SOFTWARE_GAMMA_CORRECTION else np.copy(pixels)
+    # flatten array
+    p = p.flatten()
+    #write data to stdout
+    print('1 0 ' + ' '.join(map(str, p)))
+    print('END')
+    sys.stdout.flush()
+
 def _update_blinkstick():
     """Writes new LED values to the Blinkstick.
         This function updates the LED strip with new values.
@@ -166,6 +180,8 @@ def update():
         _update_esp8266()
     elif config.DEVICE == 'lightstring':
         _update_lightstring()
+    elif config.DEVICE == 'dmx':
+        _update_dmx()
     elif config.DEVICE == 'pi':
         _update_pi()
     elif config.DEVICE == 'blinkstick':

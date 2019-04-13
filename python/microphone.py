@@ -1,7 +1,12 @@
+from __future__ import print_function
 import time
 import numpy as np
 import pyaudio
 import config
+import sys
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 def start_stream(callback):
@@ -23,7 +28,7 @@ def start_stream(callback):
             overflows += 1
             if time.time() > prev_ovf_time + 1:
                 prev_ovf_time = time.time()
-                print('Audio buffer has overflowed {} times'.format(overflows))
+                eprint('Audio buffer has overflowed {} times'.format(overflows))
     stream.stop_stream()
     stream.close()
     p.terminate()
